@@ -4,13 +4,16 @@ CFLAGS = -std=c99 -Wall
 
 all: hello prompt
 
-prompt: prompt.c
-	@cc $(CLFAGS) prompt.c -o prompt
+prompt: prompt.c build-dir
+	@cc $(CLFAGS) prompt.c -o build/prompt
 
-hello: hello.c
-	@cc $(CLFAGS) hello.c -o hello
+hello: hello.c build-dir
+	@cc $(CLFAGS) hello.c -o build/hello
+
+build-dir:
+	mkdir -p build
 
 clean:
-	@rm -rf hello
+	@rm -rf build
 
 phony: all clean hello prompt
