@@ -5,7 +5,7 @@ CFLAGS = -std=c99 -Wall
 all: hello prompt
 
 prompt: prompt.c build-dir
-	@cc $(CLFAGS) prompt.c -o build/prompt
+	@cc $(CLFAGS) -ledit prompt.c -o build/prompt
 
 hello: hello.c build-dir
 	@cc $(CLFAGS) hello.c -o build/hello

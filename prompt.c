@@ -1,18 +1,18 @@
 #include <stdio.h>
+#include <stdlib.h>
 
-#define BUF_SIZE 2048
-
-static char input[BUF_SIZE];
+#include <editline/readline.h>
 
 int main(int argc, char** argv) {
 
-        puts("Lispy version 0.0.1");
-        puts("Press Ctrl+C to exit");
+        puts("Lispy version 0.1.0");
+        puts("Press Ctrl+C to exit\n");
 
         while (1) {
-                fputs("\nlispy> ", stdout);
-                fgets(input, BUF_SIZE, stdin);
-                printf("You entered: %s", input);
+                char *usr_input = readline("> ");
+                add_history(usr_input);
+                printf("You entered: %s\n", usr_input);
+                free(usr_input);
         }
 
         return 0;
