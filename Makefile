@@ -11,7 +11,7 @@ hello: hello.c build-dir
 	@cc $(CLFAGS) hello.c -o build/hello
 
 build-dir:
-	mkdir -p build
+	@mkdir -p build
 
 clean:
 	@rm -rf build
