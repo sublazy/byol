@@ -1,0 +1,4 @@
+*.out
+*.local
+*.tmp
+build/*
