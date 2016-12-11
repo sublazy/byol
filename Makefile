@@ -11,4 +11,4 @@ build-dir:
 clean:
 	@rm -rf build
 
-phony: all clean parsing
+.PHONY: all clean parsing
