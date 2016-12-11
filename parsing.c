@@ -122,6 +122,24 @@ get_widest_branch(mpc_ast_t *tree)
 }
 
 static long
+min(long x, long y)
+{
+        if (x < y)
+                return x;
+        else
+                return y;
+}
+
+static long
+max(long x, long y)
+{
+        if (x > y)
+                return x;
+        else
+                return y;
+}
+
+static long
 eval_op(long x, char *op, long y)
 {
         if (strcmp(op, "+") == 0) return x + y;
@@ -130,6 +148,8 @@ eval_op(long x, char *op, long y)
         if (strcmp(op, "/") == 0) return x / y;
         if (strcmp(op, "%") == 0) return x % y;
         if (strcmp(op, "^") == 0) return pow(x, y);
+        if (strcmp(op, "min") == 0) return min(x, y);
+        if (strcmp(op, "max") == 0) return max(x, y);
 
         return 0;
 }
@@ -170,7 +190,8 @@ int main(int argc, char** argv)
         // Define parsers with the following language.
         mpca_lang(MPCA_LANG_DEFAULT,
                   "number   :   /-?[0-9]+/ ;"
-                  "operator :   '+' | '-' | '*' | '/' | '%' | '^' ;"
+                  "operator :   '+' | '-' | '*' | '/' | '%' | '^' |"
+                                " \"min\" | \"max\" ;"
                   "expr     :   <number> | '(' <operator> <expr>+ ')' ;"
                   "lispy    :   /^/ <operator> <expr>+ /$/ ;"
                   ,
