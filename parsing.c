@@ -24,6 +24,18 @@ is_expression_node(mpc_ast_t *tree)
         }
 }
 
+static bool
+is_paren_node(mpc_ast_t *tree)
+{
+        if ((strcmp(tree->contents, "(") == 0) ||
+            (strcmp(tree->contents, ")") == 0)) {
+                return true;
+        } else {
+                return false;
+        }
+}
+
+
 static unsigned int
 numof_leaves (mpc_ast_t *tree)
 {
