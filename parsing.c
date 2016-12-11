@@ -127,6 +127,7 @@ eval_op(long x, char *op, long y)
         if (strcmp(op, "-") == 0) return x - y;
         if (strcmp(op, "*") == 0) return x * y;
         if (strcmp(op, "/") == 0) return x / y;
+        if (strcmp(op, "%") == 0) return x % y;
 
         return 0;
 }
@@ -167,7 +168,7 @@ int main(int argc, char** argv)
         // Define parsers with the following language.
         mpca_lang(MPCA_LANG_DEFAULT,
                   "number   :   /-?[0-9]+/ ;"
-                  "operator :   '+' | '-' | '*' | '/' ;"
+                  "operator :   '+' | '-' | '*' | '/' | '%' ;"
                   "expr     :   <number> | '(' <operator> <expr>+ ')' ;"
                   "lispy    :   /^/ <operator> <expr>+ /$/ ;"
                   ,
@@ -188,6 +189,9 @@ int main(int argc, char** argv)
 
                         mpc_ast_t *ast = r.output;
                         mpc_ast_print(ast);
+
+                        long expr_result = eval(ast);
+                        printf(" %li\n", expr_result);
 
                         printf("Number of leaves: %i\n", numof_leaves(ast));
                         printf("Number of branches: %i\n", numof_branches(ast));
