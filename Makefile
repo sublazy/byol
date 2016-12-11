@@ -1,9 +1,11 @@
 CFLAGS = -std=c99 -Wall
 
+LINK_LIBS = -ledit -lm
+
 all: parsing
 
-parsing: parsing.c build-dir
-	@cc $(CLFAGS) -ledit parsing.c -o build/parsing
+parsing:parsing.c mpc.c mpc.h build-dir
+	@cc $(CLFAGS) parsing.c mpc.c $(LINK_LIBS) -o build/parsing
 
 build-dir:
 	@mkdir -p build
