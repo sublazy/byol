@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 #include <editline/readline.h>
 #include "mpc.h"
 
@@ -128,6 +129,7 @@ eval_op(long x, char *op, long y)
         if (strcmp(op, "*") == 0) return x * y;
         if (strcmp(op, "/") == 0) return x / y;
         if (strcmp(op, "%") == 0) return x % y;
+        if (strcmp(op, "^") == 0) return pow(x, y);
 
         return 0;
 }
@@ -168,7 +170,7 @@ int main(int argc, char** argv)
         // Define parsers with the following language.
         mpca_lang(MPCA_LANG_DEFAULT,
                   "number   :   /-?[0-9]+/ ;"
-                  "operator :   '+' | '-' | '*' | '/' | '%' ;"
+                  "operator :   '+' | '-' | '*' | '/' | '%' | '^' ;"
                   "expr     :   <number> | '(' <operator> <expr>+ ')' ;"
                   "lispy    :   /^/ <operator> <expr>+ /$/ ;"
                   ,
