@@ -2,10 +2,10 @@ CC = cc
 
 CFLAGS = -std=c99 -Wall
 
-all: hello prompt
+all: hello parsing
 
-prompt: prompt.c build-dir
-	@cc $(CLFAGS) -ledit prompt.c -o build/prompt
+parsing: parsing.c build-dir
+	@cc $(CLFAGS) -ledit parsing.c -o build/parsing
 
 hello: hello.c build-dir
 	@cc $(CLFAGS) hello.c -o build/hello
@@ -16,4 +16,4 @@ build-dir:
 clean:
 	@rm -rf build
 
-phony: all clean hello prompt
+phony: all clean hello parsing
