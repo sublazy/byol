@@ -1,5 +1,3 @@
-CC = cc
-
 CFLAGS = -std=c99 -Wall
 
 all: parsing
