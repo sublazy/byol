@@ -154,7 +154,6 @@ eval_op(long x, char *op, long y)
         return 0;
 }
 
-
 static long
 eval (mpc_ast_t *tree)
 {
@@ -167,6 +166,13 @@ eval (mpc_ast_t *tree)
         char *operator = node->contents;
 
         node = tree->children[++i];
+
+        // When '-' receives only one argument.
+        if ((strcmp(operator, "-") == 0) &&
+            (!is_expression_node(tree->children[i + 1]))) {
+                    return -1 * atoi(node->contents);
+        }
+
         long x = eval(node);
 
         node = tree->children[++i];
