@@ -1,4 +1,4 @@
-CFLAGS = -std=c99 -Wall
+CFLAGS = -std=c99 -Wall -g
 
 LINK_LIBS = -ledit -lm
 
