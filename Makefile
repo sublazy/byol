@@ -5,7 +5,7 @@ LINK_LIBS = -ledit -lm
 all: parsing
 
 parsing:parsing.c mpc.c mpc.h build-dir
-	@cc $(CLFAGS) parsing.c mpc.c $(LINK_LIBS) -o build/parsing
+	@cc $(CFLAGS) parsing.c mpc.c $(LINK_LIBS) -o build/parsing
 
 build-dir:
 	@mkdir -p build
