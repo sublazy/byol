@@ -8,8 +8,10 @@
  * -------------------------------------------------------------------------- */
 typedef struct {
         int type;
-        long num;
-        int err;
+        union {
+                long num;
+                int err;
+        } value;
 } lval_t;
 
 // Possible lval_t types.
@@ -25,7 +27,7 @@ lval_num(long x)
 {
         lval_t v;
         v.type = LVAL_NUM;
-        v.num = x;
+        v.value.num = x;
         return v;
 }
 
@@ -34,7 +36,7 @@ lval_err(int x)
 {
         lval_t v;
         v.type = LVAL_ERR;
-        v.err = x;
+        v.value.err = x;
         return v;
 }
 
@@ -61,10 +63,10 @@ lval_print(lval_t v)
 {
         switch (v.type) {
         case LVAL_NUM:
-                printf("%li", v.num);
+                printf("%li", v.value.num);
                 break;
         case LVAL_ERR:
-                lval_print_err(v.err);
+                lval_print_err(v.value.err);
                 break;
         default:
                 break;
@@ -106,13 +108,14 @@ eval_op(lval_t x, char *op, lval_t y)
         if (y.type == LVAL_ERR) return y;
 
 
-        if (strcmp(op, "+") == 0) return lval_num(x.num + y.num);
-        if (strcmp(op, "-") == 0) return lval_num(x.num - y.num);
-        if (strcmp(op, "*") == 0) return lval_num(x.num * y.num);
+        if (strcmp(op, "+") == 0) return lval_num(x.value.num + y.value.num);
+        if (strcmp(op, "-") == 0) return lval_num(x.value.num - y.value.num);
+        if (strcmp(op, "*") == 0) return lval_num(x.value.num * y.value.num);
         if (strcmp(op, "/") == 0) {
                 lval_t result =
-                        y.num == 0 ?
-                        lval_err(LERR_DIV_ZERO) : lval_num(x.num / y.num);
+                        y.value.num == 0 ?
+                        lval_err(LERR_DIV_ZERO)
+                        : lval_num(x.value.num / y.value.num);
                 return result;
         }
 
