@@ -9,13 +9,14 @@
 typedef struct {
         int type;
         union {
-                long num;
+                long inum;
+                double fnum;
                 int err;
         } value;
 } lval_t;
 
 // Possible lval_t types.
-enum { LVAL_NUM, LVAL_ERR };
+enum { LVAL_INUM, LVAL_FNUM, LVAL_ERR };
 
 // Possible lval_t errors.
 enum { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
@@ -23,11 +24,20 @@ enum { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
 /* Private routines
  * -------------------------------------------------------------------------- */
 static lval_t
-lval_num(long x)
+lval_inum(long x)
 {
         lval_t v;
-        v.type = LVAL_NUM;
-        v.value.num = x;
+        v.type = LVAL_INUM;
+        v.value.inum = x;
+        return v;
+}
+
+static lval_t
+lval_fnum(double x)
+{
+        lval_t v;
+        v.type = LVAL_FNUM;
+        v.value.fnum = x;
         return v;
 }
 
@@ -62,8 +72,11 @@ static void
 lval_print(lval_t v)
 {
         switch (v.type) {
-        case LVAL_NUM:
-                printf("%li", v.value.num);
+        case LVAL_INUM:
+                printf("%li", v.value.inum);
+                break;
+        case LVAL_FNUM:
+                printf("%lf", v.value.fnum);
                 break;
         case LVAL_ERR:
                 lval_print_err(v.value.err);
@@ -102,28 +115,61 @@ is_expression_node(mpc_ast_t *tree)
 }
 
 static lval_t
+eval_op_int(lval_t x, char *op, lval_t y)
+{
+        if (strcmp(op, "+") == 0) return lval_inum(x.value.inum + y.value.inum);
+        if (strcmp(op, "-") == 0) return lval_inum(x.value.inum - y.value.inum);
+        if (strcmp(op, "*") == 0) return lval_inum(x.value.inum * y.value.inum);
+        if (strcmp(op, "/") == 0) {
+                lval_t result =
+                        y.value.inum == 0 ?
+                        lval_err(LERR_DIV_ZERO)
+                        : lval_inum(x.value.inum / y.value.inum);
+                return result;
+        }
+        if (strcmp(op, "%") == 0) {
+                lval_t result =
+                        y.value.inum == 0 ?
+                        lval_err(LERR_DIV_ZERO)
+                        : lval_inum(x.value.inum % y.value.inum);
+                return result;
+        }
+
+        return lval_err(LERR_BAD_OP);
+}
+
+static lval_t
+eval_op_float(lval_t x, char *op, lval_t y)
+{
+        if (x.type == LVAL_INUM) x = lval_fnum((double)x.value.inum);
+        if (y.type == LVAL_INUM) y = lval_fnum((double)y.value.inum);
+
+        if (strcmp(op, "+") == 0) return lval_fnum(x.value.fnum + y.value.fnum);
+        if (strcmp(op, "-") == 0) return lval_fnum(x.value.fnum - y.value.fnum);
+        if (strcmp(op, "*") == 0) return lval_fnum(x.value.fnum * y.value.fnum);
+        if (strcmp(op, "%") == 0) return lval_err(LERR_BAD_OP);
+        if (strcmp(op, "/") == 0) {
+                lval_t result =
+                        y.value.fnum == 0 ?
+                        lval_err(LERR_DIV_ZERO)
+                        : lval_fnum(x.value.fnum / y.value.fnum);
+                return result;
+        }
+
+        return lval_err(LERR_BAD_OP);
+}
+
+static lval_t
 eval_op(lval_t x, char *op, lval_t y)
 {
         if (x.type == LVAL_ERR) return x;
         if (y.type == LVAL_ERR) return y;
 
-        if (strcmp(op, "+") == 0) return lval_num(x.value.num + y.value.num);
-        if (strcmp(op, "-") == 0) return lval_num(x.value.num - y.value.num);
-        if (strcmp(op, "*") == 0) return lval_num(x.value.num * y.value.num);
-        if (strcmp(op, "/") == 0) {
-                lval_t result =
-                        y.value.num == 0 ?
-                        lval_err(LERR_DIV_ZERO)
-                        : lval_num(x.value.num / y.value.num);
-                return result;
-        }
-        if (strcmp(op, "%") == 0) {
-                lval_t result =
-                        y.value.num == 0 ?
-                        lval_err(LERR_DIV_ZERO)
-                        : lval_num(x.value.num % y.value.num);
-                return result;
-        }
+        if (x.type == LVAL_FNUM || y.type == LVAL_FNUM)
+                return eval_op_float(x, op, y);
+
+        if (x.type == LVAL_INUM && y.type == LVAL_INUM)
+                return eval_op_int(x, op, y);
 
         return lval_err(LERR_BAD_OP);
 }
@@ -133,10 +179,19 @@ eval (mpc_ast_t *tree)
 {
         if (is_number_leaf(tree)) {
                 errno = 0;
-                long x = strtol(tree->contents, NULL, 10);
-                lval_t result =
-                        errno != ERANGE ?
-                          lval_num(x) : lval_err(LERR_BAD_NUM);
+                lval_t result;
+
+                if (strchr(tree->contents, '.')) {
+                        double x = strtod(tree->contents, NULL);
+                        result = lval_fnum(x);
+                } else {
+                        long x = strtol(tree->contents, NULL, 10);
+                        result = lval_inum(x);
+                }
+
+                if (errno != 0)
+                        result = lval_err(LERR_BAD_NUM);
+
                 return result;
         }
 
@@ -170,7 +225,7 @@ int main(int argc, char** argv)
 
         // Define parsers with the following language.
         mpca_lang(MPCA_LANG_DEFAULT,
-                  "number   :   /-?[0-9]+/ ;"
+                  "number   :   /-?[0-9]+(\\.[0-9]+)?/ ;"
                   "operator :   '+' | '-' | '*' | '/' | '%' ;"
                   "expr     :   <number> | '(' <operator> <expr>+ ')' ;"
                   "lispy    :   /^/ <operator> <expr>+ /$/ ;"
