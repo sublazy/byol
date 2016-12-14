@@ -107,7 +107,6 @@ eval_op(lval_t x, char *op, lval_t y)
         if (x.type == LVAL_ERR) return x;
         if (y.type == LVAL_ERR) return y;
 
-
         if (strcmp(op, "+") == 0) return lval_num(x.value.num + y.value.num);
         if (strcmp(op, "-") == 0) return lval_num(x.value.num - y.value.num);
         if (strcmp(op, "*") == 0) return lval_num(x.value.num * y.value.num);
@@ -116,6 +115,13 @@ eval_op(lval_t x, char *op, lval_t y)
                         y.value.num == 0 ?
                         lval_err(LERR_DIV_ZERO)
                         : lval_num(x.value.num / y.value.num);
+                return result;
+        }
+        if (strcmp(op, "%") == 0) {
+                lval_t result =
+                        y.value.num == 0 ?
+                        lval_err(LERR_DIV_ZERO)
+                        : lval_num(x.value.num % y.value.num);
                 return result;
         }
 
@@ -165,7 +171,7 @@ int main(int argc, char** argv)
         // Define parsers with the following language.
         mpca_lang(MPCA_LANG_DEFAULT,
                   "number   :   /-?[0-9]+/ ;"
-                  "operator :   '+' | '-' | '*' | '/' ;"
+                  "operator :   '+' | '-' | '*' | '/' | '%' ;"
                   "expr     :   <number> | '(' <operator> <expr>+ ')' ;"
                   "lispy    :   /^/ <operator> <expr>+ /$/ ;"
                   ,
