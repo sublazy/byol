@@ -29,7 +29,7 @@ static lval_t* lval_new_sym(char *sym);
 static lval_t* lval_new_sexpr(void);
 static void sexpr_del(lval_t *sexpr);
 static void lval_del(lval_t *v);
-static void lval_print_err(lval_t *e);
+static void lval_print_expr(lval_t *v, char open, char close);
 static void lval_print(lval_t *v);
 static void lval_println(lval_t *v);
 static bool is_number_leaf(mpc_ast_t *tree);
@@ -110,22 +110,18 @@ lval_del(lval_t *v)
 }
 
 static void
-lval_print_err(lval_t *e)
+lval_print_expr(lval_t *v, char open, char close)
 {
-        printf("%s", e->err);
-//        switch (e) {
-//        case LERR_DIV_ZERO:
-//                printf("Error: Division by zero.");
-//                break;
-//        case LERR_BAD_OP:
-//                printf("Error: Invalid operator.");
-//                break;
-//        case LERR_BAD_NUM:
-//                printf("Error: Invalid number.");
-//                break;
-//        default:
-//                printf("Error: Unclassified error.");
-//        }
+        putchar(open);
+
+        for (int i = 0; i < v->cnt; i++) {
+                lval_print(v->cell[i]);
+
+                if (i != (v->cnt - 1)) {
+                        putchar(' ');
+                }
+        }
+        putchar(close);
 }
 
 static void
@@ -136,7 +132,13 @@ lval_print(lval_t *v)
                 printf("%li", v->num);
                 break;
         case LVAL_ERR:
-                lval_print_err(v);
+                printf("Error: %s", v->err);
+                break;
+        case LVAL_SYM:
+                printf("%s", v->sym);
+                break;
+        case LVAL_SEXPR:
+                lval_print_expr(v, '(', ')');
                 break;
         default:
                 break;
@@ -162,7 +164,7 @@ is_number_leaf(mpc_ast_t *tree)
 }
 
 static bool
-is_node_type(mpc_ast_t *node, char *type)
+is_node_of_type(mpc_ast_t *node, char *type)
 {
         return strstr(node->tag, type) != 0 ? true : false;
 }
@@ -171,19 +173,6 @@ static bool
 is_node_root(mpc_ast_t *node)
 {
         return strcmp(node->tag, ">") == 0 ? true : false;
-}
-
-static bool
-is_node_bracket(mpc_ast_t *node)
-{
-        if ((strcmp(node->contents, "(") == 0) ||
-            (strcmp(node->contents, ")") == 0) ||
-            (strcmp(node->contents, "{") == 0) ||
-            (strcmp(node->contents, "}") == 0))
-
-                return true;
-        else
-                return false;
 }
 
 static bool
@@ -230,27 +219,33 @@ eval_op(lval_t *x, char *op, lval_t *y)
 static lval_t*
 lval_read(mpc_ast_t *tree)
 {
-        if (is_node_type(tree, "number"))
+        if (is_node_of_type(tree, "number")) {
                 return lval_read_num(tree);
+        }
 
-        if (is_node_type(tree, "symbol"))
+        if (is_node_of_type(tree, "symbol")) {
                 return lval_new_sym(tree->contents);
+        }
 
         lval_t *sexpr = NULL;
 
-        if ((is_node_type(tree, "sexpr")) || (is_node_root(tree)))
+        if ((is_node_of_type(tree, "sexpr")) || (is_node_root(tree))) {
                 sexpr = lval_new_sexpr();
+        }
 
         for (int i = 0; i < tree->children_num; i++) {
                 mpc_ast_t *node = tree->children[i];
 
-                if ((!is_node_bracket(node)) && (!is_node_type(node, "regex")))
+                if ((is_node_of_type(node, "number")) ||
+                    (is_node_of_type(node, "symbol")) ||
+                    (is_node_of_type(node, "sexpr"))) {
+
                         sexpr = lval_add_to_sexpr(sexpr, lval_read(node));
+                }
         }
 
         return sexpr;
 }
-
 
 static lval_t*
 lval_add_to_sexpr(lval_t *dst_node, lval_t *src_node)
@@ -322,8 +317,11 @@ int main(int argc, char** argv)
                 if (mpc_parse("<stdin>", usr_input, Lispy, &r)) {
                         // Parsing successful.
                         mpc_ast_t *ast = r.output;
-                        lval_t *expr_result = eval(ast);
-                        lval_println(expr_result);
+                        lval_t *x = lval_read(ast);
+                        lval_println(x);
+                        lval_del(x);
+                        //lval_t *expr_result = eval(ast);
+                        //lval_println(expr_result);
                         mpc_ast_delete(ast);
                 } else {
                         mpc_err_print(r.error);
